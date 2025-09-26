@@ -9,14 +9,15 @@ import jwt from "jsonwebtoken";
 import cors from "cors";
 import fetch from "node-fetch";
 
+const FRONTEND_URL = "https://codecollab-frontend-6pmc.onrender.com";
 dotenv.config();
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: FRONTEND_URL }));
 app.use(express.json());
 
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+const io = new Server(server, { cors: { origin: FRONTEND_URL } });
 
 // ------------------ MongoDB Connection ------------------
 const uri = process.env.MONGO_URI;
