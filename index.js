@@ -9,7 +9,7 @@ import jwt from "jsonwebtoken";
 import cors from "cors";
 import fetch from "node-fetch";
 
-const FRONTEND_URL = "https://codecollab-frontend-6pmc.onrender.com";
+const FRONTEND_URL="https://codecollab-frontend-6pmc.onrender.com";
 dotenv.config();
 
 const app = express();
@@ -245,31 +245,36 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("leaveRoom", async () => {
+  // In backend/index.js
+
+  const handleUserExit = async () => {
     if (currentRoom && currentUser) {
-      const room = await Room.findOne({ roomId: currentRoom });
-      if (room) {
-        room.users = room.users.filter((u) => u !== currentUser);
-        await room.save();
-        io.to(currentRoom).emit("userJoined", room.users);
+      // Use an atomic $pull operation to safely remove the user
+      const updatedRoom = await Room.findOneAndUpdate(
+        { roomId: currentRoom },
+        { $pull: { users: currentUser } },
+        { new: true } // This option returns the updated document
+      );
+
+      // If the room still exists after the update, broadcast the new user list
+      if (updatedRoom) {
+        io.to(currentRoom).emit("userJoined", updatedRoom.users);
       }
+      
       socket.leave(currentRoom);
       currentRoom = null;
       currentUser = null;
       currentRole = null;
     }
+  };
+
+  socket.on("leaveRoom", async () => {
+    await handleUserExit();
   });
 
   socket.on("disconnect", async () => {
-    if (currentRoom && currentUser) {
-      const room = await Room.findOne({ roomId: currentRoom });
-      if (room) {
-        room.users = room.users.filter((u) => u !== currentUser);
-        await room.save();
-        io.to(currentRoom).emit("userJoined", room.users);
-      }
-    }
-    console.log("User Disconnected");
+    await handleUserExit();
+    console.log("User Disconnected", socket.id);
   });
 });
 
