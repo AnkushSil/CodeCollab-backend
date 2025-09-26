@@ -272,13 +272,17 @@ io.on("connection", (socket) => {
   });
 });
 
-// ------------------ Serve Frontend ------------------
-const port = process.env.PORT || 5000;
+// ------------------ Start Server ------------------
+const port = process.env.PORT || 10000; // Using 10000 to match Render's default
+
+/*
+// This part is now disabled because the frontend will be a separate service.
 const __dirname = path.resolve();
 app.use(express.static(path.join(__dirname, "/frontend/dist")));
-app.get(/.*/, (req, res) => {
+app.get(/."", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend", "dist", "index.html"));
 });
+*/
 
 server.listen(port, () =>
   console.log(`Server running at http://localhost:${port}`)
